@@ -8,141 +8,86 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Oracle.DataAccess.Client;
+using Oracle.DataAccess.Types;
 
 namespace TeamProject
 {
     public partial class order : Form
     {
         private DBClass dbClass;
-        private string userId; // userId를 저장할 변수 추가
-        private string userAdress; // userAdress를 저장할 변수 추가
-        private string userPhone; // userId를 저장할 변수 추가
-        private string orderId; // orderId를 저장할 변수 추가
-        private string InqId; // InqId를 저장할 변수 추가
+        private string SubcategoryId; // 제품번호를 저장할 변수
+        private string totalCount; // 재고수량을 저장할 변수
+        private string amount; // 금액을 저장할 변수
 
         public string SelectedOrderId { get; set; }
         public string SelectedInqId { get; set; }
-        public order(string loggedInUserId, string loggedInUserAdress, string loggedInUserPhone)
+
+        public order()
         {
             InitializeComponent();
-            dbClass = new DBClass();
-
-            // 생성자에서 userId, userAdress, userPhone 초기화
-            userId = loggedInUserId;
-            userAdress = loggedInUserAdress;
-            userPhone = loggedInUserPhone;
-
-            // TextBox1 텍스트 업데이트
-            UpdateTextBox1();
-
-            LoadDataToGridView(); // 데이터 로드 메서드 호출
         }
 
-        // SetLoggedInUserId 메서드 정의 추가
-        public void SetLoggedInUserId(string loggedInUserId, string loggedInUserAdress, string loggedInUserPhone)
-        {
-            userId = loggedInUserId;
-            // TextBox1 텍스트 업데이트
-            UpdateTextBox1();
-            userAdress = loggedInUserAdress;
-            // TextBox2 텍스트 업데이트
-            UpdateTextBox2();
-            userPhone = loggedInUserPhone;
-            // TextBox3 텍스트 업데이트
-            UpdateTextBox3();
-        }
-
-        private void UpdateTextBox1()
-        {
-            textBox1.Text = $"{userId}";
-        }
-        private void UpdateTextBox2()
-        {
-            textBox2.Text = $"{userAdress}";
-        }
-        private void UpdateTextBox3()
-        {
-            textBox3.Text = $"{userPhone}";
-        }
-        private void LoadDataToGridView()
-        {
-            try
-            {
-                // DB 연결
-                if (!dbClass.ConnectToDatabase())
-                {
-                    MessageBox.Show("DB 연결에 실패했습니다.");
-                    return;
-                }
-
-                // DataGridView2 초기화
-                dataGridView2.Columns.Clear();
-                dataGridView2.Rows.Clear();
-
-                // SQL 쿼리를 생성하여 데이터 가져오기
-                string selectQuery = "SELECT * FROM Inquiries";
-                OracleDataAdapter dataAdapter = new OracleDataAdapter(selectQuery, dbClass.DCom.Connection);
-                DataSet dataSet = new DataSet();
-                dataAdapter.Fill(dataSet, "Inquiries");
-
-                // 그리드뷰 데이터 초기화
-                dataGridView2.DataSource = dataSet.Tables["Inquiries"];
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"데이터 로드 중 오류 발생: {ex.Message}");
-            }
-            finally
-            {
-                // DB 연결 종료
-                dbClass.DisconnectFromDatabase();
-            }
-        }
-        public void ResetMypage()
-        {
-            // userId 초기화
-            userId = null;
-
-            // TextBox1 초기화
-            UpdateTextBox1();
-
-            // DataGridView 초기화
-            dataGridView1.DataSource = null;
-
-            // 주문 횟수 초기화
-            Label2.Text = "주문횟수: 0 번";
-        }
         private void order_Load(object sender, EventArgs e)
         {
-            // DB 연결
-            if (dbClass.ConnectToDatabase())
+            LoadSubcategoryData();
+        }
+
+        private void LoadSubcategoryData()
+        {
+            // 올바른 연결 문자열 형식
+            string ConStr = "User Id=hong1; Password=1111; Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=xe)));";
+
+            using (OracleConnection conn = new OracleConnection(ConStr))
             {
-                // Orders 테이블을 DataGridView에 표시
-                DisplayOrdersTable();
-
-                // Orders 테이블의 열 헤더 설정
-                Orders_header();
-
-                // Orders 테이블의 행 수를 표시
-                Orders_counter();
-
-                // Inquiries 테이블을 DataGridView에 표시
-                DisplayInquiriesTable();
-
-                // DataGridView2의 CellClick 이벤트 핸들러 등록
-                dataGridView2.CellClick += dataGridView2_CellClick;
-
-                // Inquiries 테이블의 열 헤더 설정
-                Inquiries_header();
-
-                // Inquiries 테이블의 행 수를 표시
-                Inquiries_counter();
+                try
+                {
+                    dbClass.DS.Clear();
+                    dbClass.DA.Fill(dbClass.DS, "Product");
+                    dataGridView1.DataSource = dbClass.DS.Tables["Product"].DefaultView;
+                }
+                catch (DataException DE)
+                {
+                    MessageBox.Show(DE.Message);
+                }
+                catch (Exception DE)
+                {
+                    MessageBox.Show(DE.Message);
+                }
             }
-            else
+        }
+        private void searchBtn_Click(object sender, EventArgs e)
+        {
+            string ConStr = "User Id=hong1; Password=1111; Data Source=(DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521)) (CONNECT_DATA = (SERVER = DEDICATED) (SERVICE_NAME =xe) ) );";
+            OracleConnection conn = new OracleConnection(ConStr);
+            conn.Open();
+            OracleDataAdapter DBAdapter = new OracleDataAdapter();
+            DBAdapter.SelectCommand = new OracleCommand("select * from Product where productName=:productName", conn);
+            DBAdapter.SelectCommand.Parameters.Add("productName", OracleDbType.Varchar2, 20);
+            DBAdapter.SelectCommand.Parameters["productName"].Value = textBox1.Text.Trim();
+            DataSet DS = new DataSet();
+            DBAdapter.Fill(DS, "Product");
+            DataTable productTable = DS.Tables["Product"];
+            dataGridView1.DataSource = productTable;
+        }
+        private void 업데이트ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // 전체 DataGridView 데이터를 업데이트합니다.
+            LoadSubcategoryData();
+        }
+        private void 장바구니추가ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (dataGridView1.CurrentRow != null)
             {
-                MessageBox.Show("DB 연결에 실패했습니다.");
-                this.Close();
+                var selectedRow = dataGridView1.CurrentRow;
+                var productId = Convert.ToString(selectedRow.Cells["ProductIdColumn"].Value); // 'ProductIdColumn'은 해당 열의 이름으로 변경해야 합니다.
+
+                orderAdd orderAddForm = new orderAdd(productId);
+                orderAddForm.ShowDialog();
             }
+        }
+        private void ConfirmOrderMenuItem_Click(object sender, EventArgs e)
+        {
+            // 주문 확정 관련 코드
         }
     }
 }

@@ -287,3 +287,5 @@ C:\Users\User\source\repos\TeamProject\팀플 (2023-11-23)\TeamProject\TeamProje
 C:\Users\User\source\repos\TeamProject\팀플 (2023-11-23)\TeamProject\TeamProject\obj\Debug\TeamProject.exe
 C:\Users\User\source\repos\TeamProject\팀플 (2023-11-23)\TeamProject\TeamProject\obj\Debug\TeamProject.pdb
 C:\Users\User\source\repos\TeamProject\팀플 (2023-11-23)\TeamProject\TeamProject\obj\Debug\TeamProject.order.resources
+C:\Users\kimmi\source\repos\DB＆C＃_Project\Safety_Delivery\팀플 (2023-11-23)\TeamProject\TeamProject\obj\Debug\TeamProject.order.resources
+C:\Users\kimmi\source\repos\DB＆C＃_Project\Safety_Delivery\팀플 (2023-11-23)\TeamProject\TeamProject\obj\Debug\TeamProject.orderAdd.resources
